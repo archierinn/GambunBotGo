@@ -19,6 +19,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strings"
 
 	"github.com/line/line-bot-sdk-go/v7/linebot"
 )
@@ -52,6 +53,13 @@ func main() {
 			if event.Type == linebot.EventTypeMessage {
 				switch message := event.Message.(type) {
 				case *linebot.TextMessage:
+					check := strings.Contains(message.Text, "$apakah")
+					if check != false {
+						if _, err = bot.ReplyMessage(event.ReplyToken, linebot.NewTextMessage("Hello, My Name is Kei")).Do(); err != nil {
+							log.Print(err)
+						}
+					}
+
 					if _, err = bot.ReplyMessage(event.ReplyToken, linebot.NewTextMessage(message.Text)).Do(); err != nil {
 						log.Print(err)
 					}
