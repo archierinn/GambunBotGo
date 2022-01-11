@@ -53,7 +53,7 @@ func main() {
 			if event.Type == linebot.EventTypeMessage {
 				switch message := event.Message.(type) {
 				case *linebot.TextMessage:
-					if !strings.Contains(message.Text, "$apakah gacha") {
+					if strings.Contains(message.Text, "$apakah gacha") {
 						typeMessage := gacha.GachaPercentage()
 
 						if _, err = bot.ReplyMessage(event.ReplyToken, linebot.NewTextMessage(typeMessage)).Do(); err != nil {
@@ -61,9 +61,9 @@ func main() {
 						}
 					}
 
-					if _, err = bot.ReplyMessage(event.ReplyToken, linebot.NewTextMessage(message.Text)).Do(); err != nil {
-						log.Print(err)
-					}
+					// if _, err = bot.ReplyMessage(event.ReplyToken, linebot.NewTextMessage(message.Text)).Do(); err != nil {
+					// 	log.Print(err)
+					// }
 
 					// case *linebot.StickerMessage:
 					// 	replyMessage := fmt.Sprintf(
