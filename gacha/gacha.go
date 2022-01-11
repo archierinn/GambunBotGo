@@ -44,15 +44,28 @@ func GachaPercentage() string {
 	result := Gacha(100)
 	if result >= 33 {
 		percentage := (math.Floor((((rand.Float64() * (100 - 75)) + 75) * 100))) / 100
-		message := "Ya, persentase luck kamu:\n" + strconv.FormatFloat(percentage, 'f', -1, 32) + "%"
-		return message
+		percentageStr := strconv.FormatFloat(percentage, 'f', -1, 32) + "%"
+		if percentage >= 90 {
+			message := "Laksek! Luck kamu:\n" + percentageStr
+			return message
+		} else {
+			message := "Ya! Luck kamu:\n" + percentageStr
+			return message
+		}
 	} else if result < 28 {
 		percentage := (math.Floor(((rand.Float64() * (74 - 45)) + 45) * 100)) / 100
-		message := "Terserah, persentase luck kamu:\n" + strconv.FormatFloat(percentage, 'f', -1, 32) + "%"
+		percentageStr := strconv.FormatFloat(percentage, 'f', -1, 32) + "%"
+		message := "Biasa saja, luck kamu:\n" + percentageStr
 		return message
 	} else {
 		percentage := (math.Floor((rand.Float64() * (44 - 0)) * 100)) / 100
-		message := "Sebaiknya tidak, persentase luck kamu:\n" + strconv.FormatFloat(percentage, 'f', -1, 32) + "%"
-		return message
+		percentageStr := strconv.FormatFloat(percentage, 'f', -1, 32) + "%"
+		if percentage < 10 {
+			message := "AMPAS! Luck kamu:\n" + percentageStr
+			return message
+		} else {
+			message := "Sebaiknya tidak, luck kamu:\n" + strconv.FormatFloat(percentage, 'f', -1, 32) + "%"
+			return message
+		}
 	}
 }
