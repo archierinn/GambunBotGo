@@ -15,7 +15,7 @@
 package main
 
 import (
-	"fmt"
+	"gambunbot/gacha"
 	"log"
 	"net/http"
 	"os"
@@ -53,9 +53,10 @@ func main() {
 			if event.Type == linebot.EventTypeMessage {
 				switch message := event.Message.(type) {
 				case *linebot.TextMessage:
-					check := strings.Contains(message.Text, "$apakah")
-					if check != false {
-						if _, err = bot.ReplyMessage(event.ReplyToken, linebot.NewTextMessage("Hello, My Name is Kei")).Do(); err != nil {
+					if !strings.Contains(message.Text, "$apakah gacha") {
+						typeMessage := gacha.GachaPercentage()
+
+						if _, err = bot.ReplyMessage(event.ReplyToken, linebot.NewTextMessage(typeMessage)).Do(); err != nil {
 							log.Print(err)
 						}
 					}
@@ -63,12 +64,13 @@ func main() {
 					if _, err = bot.ReplyMessage(event.ReplyToken, linebot.NewTextMessage(message.Text)).Do(); err != nil {
 						log.Print(err)
 					}
-				case *linebot.StickerMessage:
-					replyMessage := fmt.Sprintf(
-						"sticker id is %s, stickerResourceType is %s", message.StickerID, message.StickerResourceType)
-					if _, err = bot.ReplyMessage(event.ReplyToken, linebot.NewTextMessage(replyMessage)).Do(); err != nil {
-						log.Print(err)
-					}
+
+					// case *linebot.StickerMessage:
+					// 	replyMessage := fmt.Sprintf(
+					// 		"sticker id is %s, stickerResourceType is %s", message.StickerID, message.StickerResourceType)
+					// 	if _, err = bot.ReplyMessage(event.ReplyToken, linebot.NewTextMessage(replyMessage)).Do(); err != nil {
+					// 		log.Print(err)
+					// 	}
 				}
 			}
 		}
