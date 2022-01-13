@@ -76,7 +76,6 @@ func GachaSim(total_gacha, rate, bulk_draw int) string {
 		}
 	}
 
-	// message := "Jumlah Rarity Tertinggi yang kamu dapat:\n" + strconv.Itoa(balancer)
-	message := "Draw: " + strconv.Itoa(total_gacha) + " Rate:" + strconv.Itoa(rate)
+	message := "Jumlah Rarity Tertinggi yang kamu dapat:\n" + strconv.Itoa(balancer)
 	return message
 }
