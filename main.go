@@ -64,8 +64,8 @@ func main() {
 
 					if strings.Contains(message.Text, "$gacha sim") {
 						splitter := strings.Split(message.Text, "$")
-						draw, _ := strconv.Atoi(strings.SplitAfterN(splitter[2], " ", 3)[1])
-						rate, _ := strconv.Atoi(strings.SplitAfterN(splitter[3], " ", 2)[1])
+						draw, _ := strconv.Atoi(strings.Split(splitter[2], " ")[1])
+						rate, _ := strconv.Atoi(strings.Split(splitter[3], " ")[1])
 
 						replyMessage := gacha.GachaSim(draw, rate, 1)
 
