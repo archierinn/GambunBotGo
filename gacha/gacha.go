@@ -7,12 +7,9 @@ import (
 	"time"
 )
 
-const rate = 3
-const total_pulls = 100
 const pool = 100
-const bulk_draw = 10
 
-func Gacha(total_gacha int) int {
+func Gacha(total_gacha, rate, bulk_draw int) int {
 	rand.Seed(int64(time.Now().Nanosecond()))
 
 	shuffle := rand.Perm(pool)
@@ -22,7 +19,7 @@ func Gacha(total_gacha int) int {
 	}
 
 	lucky_hit := 0
-	for x := 0; x < total_pulls; x++ {
+	for x := 0; x < total_gacha; x++ {
 		pull_result := make([]int, bulk_draw)
 		for i := range pull_result {
 			pull_result[i] = rand.Intn(pool)
@@ -41,7 +38,7 @@ func Gacha(total_gacha int) int {
 }
 
 func GachaPercentage() string {
-	result := Gacha(100)
+	result := Gacha(100, 3, 10) //gacha 100x, rate 3% (rate/pool), 10pull/gacha
 	if result >= 33 {
 		percentage := (math.Floor((((rand.Float64() * (100 - 75)) + 75) * 100))) / 100
 		percentageStr := strconv.FormatFloat(percentage, 'f', -1, 32) + "%"
@@ -68,4 +65,17 @@ func GachaPercentage() string {
 			return message
 		}
 	}
+}
+
+func GachaSim(total_gacha, rate, bulk_draw int) string {
+	balancer := 0
+	for x := 0; x <= 3; x++ {
+		if balancer <= rate-1 {
+			gacha_result := Gacha(total_gacha, rate, bulk_draw)
+			balancer = gacha_result
+		}
+	}
+
+	message := "Jumlah Rarity Tertinggi yang kamu dapat:\n" + strconv.Itoa(balancer)
+	return message
 }

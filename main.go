@@ -19,20 +19,16 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strconv"
 	"strings"
 
 	"github.com/line/line-bot-sdk-go/v7/linebot"
 )
 
 func main() {
-	// bot, err := linebot.New(
-	// 	os.Getenv("CHANNEL_SECRET"),
-	// 	os.Getenv("CHANNEL_TOKEN"),
-	// )
-
 	bot, err := linebot.New(
-		"2656fe09b0298ca731ef9d2dee59e954",
-		"Rx0nXjgzZ285hrGebaWjASG/I3UK/kougus6c37nel6iUKAGAUjD4mcoVqXpG9zjmYGJzsAzYMfjArS5N39Z/OxY66eQqPcR+CqXUZRcZZO0Uu+/EQp+UU4fWm+KmS7ql4TA6OrjZtyeKyMqFaAe+gdB04t89/1O/w1cDnyilFU=",
+		os.Getenv("CHANNEL_SECRET"),
+		os.Getenv("CHANNEL_TOKEN"),
 	)
 	if err != nil {
 		log.Fatal(err)
@@ -54,9 +50,21 @@ func main() {
 				switch message := event.Message.(type) {
 				case *linebot.TextMessage:
 					if strings.Contains(message.Text, "$apakah gacha") {
-						typeMessage := gacha.GachaPercentage()
+						replyMessage := gacha.GachaPercentage()
 
-						if _, err = bot.ReplyMessage(event.ReplyToken, linebot.NewTextMessage(typeMessage)).Do(); err != nil {
+						if _, err = bot.ReplyMessage(event.ReplyToken, linebot.NewTextMessage(replyMessage)).Do(); err != nil {
+							log.Print(err)
+						}
+					}
+
+					if strings.Contains(message.Text, "$gacha sim") {
+						splitter := strings.Split(message.Text, "$")
+						draw, _ := strconv.Atoi(strings.SplitAfterN(splitter[2], " ", 3)[1])
+						rate, _ := strconv.Atoi(strings.SplitAfterN(splitter[3], " ", 2)[1])
+
+						replyMessage := gacha.GachaSim(draw, rate, 1)
+
+						if _, err := bot.ReplyMessage(event.ReplyToken, linebot.NewTextMessage(replyMessage)).Do(); err != nil {
 							log.Print(err)
 						}
 					}
