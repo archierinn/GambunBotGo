@@ -78,7 +78,10 @@ func GachaSim(total_gacha, rate, bulk_draw, luck int) string {
 	for x := 0; x <= repeat; x++ {
 		if balancer <= rate-1 {
 			gacha_result := Gacha(total_gacha, rate, bulk_draw)
-			balancer = gacha_result
+
+			if balancer < gacha_result {
+				balancer = gacha_result
+			}
 		}
 	}
 
