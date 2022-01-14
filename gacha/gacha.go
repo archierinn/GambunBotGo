@@ -37,45 +37,51 @@ func Gacha(total_gacha, rate, bulk_draw int) int {
 	return int(lucky_hit)
 }
 
-func GachaPercentage() string {
+func GachaPercentage() (luck string, pity int) {
 	result := Gacha(100, 3, 10) //gacha 100x, rate 3% (rate/pool), 10pull/gacha
 	if result >= 33 {
 		percentage := (math.Floor((((rand.Float64() * (100 - 75)) + 75) * 100))) / 100
 		percentageStr := strconv.FormatFloat(percentage, 'f', -1, 32) + "%"
 		if percentage >= 90 {
 			message := "Laksek! Luck kamu:\n" + percentageStr
-			return message
+			return message, int(percentage)
 		} else {
 			message := "Ya! Luck kamu:\n" + percentageStr
-			return message
+			return message, int(percentage)
 		}
 	} else if result < 28 {
 		percentage := (math.Floor(((rand.Float64() * (74 - 45)) + 45) * 100)) / 100
 		percentageStr := strconv.FormatFloat(percentage, 'f', -1, 32) + "%"
-		message := "Biasa saja, luck kamu:\n" + percentageStr
-		return message
+		message := "Luck kamu biasa saja\n" + percentageStr
+		return message, int(percentage)
 	} else {
 		percentage := (math.Floor((rand.Float64() * (44 - 0)) * 100)) / 100
 		percentageStr := strconv.FormatFloat(percentage, 'f', -1, 32) + "%"
 		if percentage < 10 {
 			message := "AMPAS! Luck kamu:\n" + percentageStr
-			return message
+			return message, 0
 		} else {
 			message := "Sebaiknya tidak, luck kamu:\n" + strconv.FormatFloat(percentage, 'f', -1, 32) + "%"
-			return message
+			return message, 0
 		}
 	}
 }
 
-func GachaSim(total_gacha, rate, bulk_draw int) string {
+func GachaSim(total_gacha, rate, bulk_draw, luck int) string {
 	balancer := 0
-	for x := 0; x <= 3; x++ {
+	repeat := 0
+	if luck < 7 {
+		repeat = 2
+	} else {
+		repeat = luck
+	}
+	for x := 0; x <= repeat; x++ {
 		if balancer <= rate-1 {
 			gacha_result := Gacha(total_gacha, rate, bulk_draw)
 			balancer = gacha_result
 		}
 	}
 
-	message := "Jumlah Rarity Tertinggi yang kamu dapat:\n" + strconv.Itoa(balancer)
+	message := "SSR yang kamu dapat:\n" + strconv.Itoa(balancer)
 	return message
 }

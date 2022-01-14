@@ -55,10 +55,24 @@ func main() {
 				switch message := event.Message.(type) {
 				case *linebot.TextMessage:
 					if strings.Contains(message.Text, "$apakah gacha") {
-						replyMessage := gacha.GachaPercentage()
+						if strings.Contains(message.Text, "$draw") && strings.Contains(message.Text, "$rate") {
+							splitter := strings.Split(message.Text, "$")
+							draw, _ := strconv.Atoi(strings.Split(splitter[2], " ")[1])
+							rate, _ := strconv.Atoi(strings.Split(splitter[3], " ")[1])
 
-						if _, err = bot.ReplyMessage(event.ReplyToken, linebot.NewTextMessage(replyMessage)).Do(); err != nil {
-							log.Print(err)
+							luckMessage, luck := gacha.GachaPercentage()
+							simMessage := gacha.GachaSim(draw, rate, 1, luck)
+							replyMessage := luckMessage + "\n" + simMessage
+
+							if _, err = bot.ReplyMessage(event.ReplyToken, linebot.NewTextMessage(replyMessage)).Do(); err != nil {
+								log.Print(err)
+							}
+						} else {
+							replyMessage, _ := gacha.GachaPercentage()
+
+							if _, err = bot.ReplyMessage(event.ReplyToken, linebot.NewTextMessage(replyMessage)).Do(); err != nil {
+								log.Print(err)
+							}
 						}
 					}
 
@@ -67,7 +81,7 @@ func main() {
 						draw, _ := strconv.Atoi(strings.Split(splitter[2], " ")[1])
 						rate, _ := strconv.Atoi(strings.Split(splitter[3], " ")[1])
 
-						replyMessage := gacha.GachaSim(draw, rate, 1)
+						replyMessage := gacha.GachaSim(draw, rate, 1, 0)
 
 						if _, err := bot.ReplyMessage(event.ReplyToken, linebot.NewTextMessage(replyMessage)).Do(); err != nil {
 							log.Print(err)
