@@ -15,26 +15,47 @@
 package main
 
 import (
+	"gambunbot/code"
 	"gambunbot/gacha"
+	"gambunbot/osusume"
 	"log"
+	"math/rand"
 	"net/http"
 	"os"
+	"regexp"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/line/line-bot-sdk-go/v7/linebot"
 )
 
-func main() {
-	// bot, err := linebot.New(
-	// 	os.Getenv("CHANNEL_SECRET"),
-	// 	os.Getenv("CHANNEL_TOKEN"),
-	// )
+const INITIAL_VALUE int = 0
+const ONE int = 1
 
+func ArrayRand(elements []string) int {
+	rand.Seed(int64(time.Now().Nanosecond()))
+	randomIndex := INITIAL_VALUE
+	if len(elements) > ONE {
+		randomIndex = rand.Intn(len(elements))
+	}
+	return randomIndex
+}
+
+func sendReply(bot *linebot.Client, event *linebot.Event, replyMessage []string) {
+	index := ArrayRand(replyMessage)
+
+	if _, err := bot.ReplyMessage(event.ReplyToken, linebot.NewTextMessage(replyMessage[index])).Do(); err != nil {
+		log.Print(err)
+	}
+}
+
+func main() {
 	bot, err := linebot.New(
-		"2656fe09b0298ca731ef9d2dee59e954",
-		"Rx0nXjgzZ285hrGebaWjASG/I3UK/kougus6c37nel6iUKAGAUjD4mcoVqXpG9zjmYGJzsAzYMfjArS5N39Z/OxY66eQqPcR+CqXUZRcZZO0Uu+/EQp+UU4fWm+KmS7ql4TA6OrjZtyeKyMqFaAe+gdB04t89/1O/w1cDnyilFU=",
+		os.Getenv("CHANNEL_SECRET"),
+		os.Getenv("CHANNEL_TOKEN"),
 	)
+
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -54,26 +75,40 @@ func main() {
 			if event.Type == linebot.EventTypeMessage {
 				switch message := event.Message.(type) {
 				case *linebot.TextMessage:
-					if strings.Contains(message.Text, "$apakah gacha") {
-						if strings.Contains(message.Text, "$draw") && strings.Contains(message.Text, "$rate") {
-							splitter := strings.Split(message.Text, "$")
-							draw, _ := strconv.Atoi(strings.Split(splitter[2], " ")[1])
-							rate, _ := strconv.Atoi(strings.Split(splitter[3], " ")[1])
-
-							luckMessage, luck := gacha.GachaPercentage()
-							simMessage := gacha.GachaSim(draw, rate, 1, luck)
-							replyMessage := luckMessage + "\n" + simMessage
-
-							if _, err = bot.ReplyMessage(event.ReplyToken, linebot.NewTextMessage(replyMessage)).Do(); err != nil {
-								log.Print(err)
+					lowerCaseMessage := strings.ToLower(message.Text)
+					if strings.Contains(lowerCaseMessage, "#apakah") {
+						replyMessage := []string{}
+						if strings.Contains(message.Text, "atau") {
+							replyString := []string{}
+							if strings.Contains(lowerCaseMessage, "?") {
+								splitMessage := regexp.MustCompile(`(\?|\.|!)`).Split(lowerCaseMessage, -1)
+								replyString = strings.Split(splitMessage[0], "apakah ")
+							} else {
+								replyString = strings.Split(lowerCaseMessage, "apakah ")
 							}
+
+							replyMessage = strings.Split(replyString[1], " atau ")
+
+						} else if strings.Contains(lowerCaseMessage, "gacha") {
+							gachaResult, _ := gacha.GachaPercentage()
+							replyMessage = append(replyMessage, gachaResult)
 						} else {
-							replyMessage, _ := gacha.GachaPercentage()
-
-							if _, err = bot.ReplyMessage(event.ReplyToken, linebot.NewTextMessage(replyMessage)).Do(); err != nil {
-								log.Print(err)
-							}
+							replyMessage = []string{"ya", "tidak", "ya", "tidak"}
 						}
+
+						sendReply(bot, event, replyMessage)
+					} else if strings.Contains(lowerCaseMessage, "#kodenuklir3") || strings.Contains(lowerCaseMessage, "#kodenuklir6") {
+						replyMessage := []string{}
+						codeResult := code.GetRandomCode(lowerCaseMessage)
+						replyMessage = append(replyMessage, codeResult)
+
+						sendReply(bot, event, replyMessage)
+					} else if strings.Contains(lowerCaseMessage, "#osusumeanime") || strings.Contains(lowerCaseMessage, "#osusumemanga") || strings.Contains(lowerCaseMessage, "#osusumevn") {
+						replyMessage := []string{}
+						codeResult := osusume.GetRandomOsusume(lowerCaseMessage)
+						replyMessage = append(replyMessage, codeResult)
+
+						sendReply(bot, event, replyMessage)
 					}
 
 					if strings.Contains(message.Text, "$gacha sim") {
