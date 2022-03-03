@@ -27,6 +27,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/akrylysov/algnhsa"
 	"github.com/line/line-bot-sdk-go/v7/linebot"
 )
 
@@ -50,7 +51,85 @@ func sendReply(bot *linebot.Client, event *linebot.Event, replyMessage []string)
 	}
 }
 
+func handleCallback(w http.ResponseWriter, req *http.Request, bot *linebot.Client) {
+	events, err := bot.ParseRequest(req)
+	if err != nil {
+		if err == linebot.ErrInvalidSignature {
+			w.WriteHeader(400)
+		} else {
+			w.WriteHeader(500)
+		}
+		return
+	}
+	for _, event := range events {
+		if event.Type == linebot.EventTypeMessage {
+			switch message := event.Message.(type) {
+			case *linebot.TextMessage:
+				lowerCaseMessage := strings.ToLower(message.Text)
+				if strings.Contains(lowerCaseMessage, "#apakah") {
+					replyMessage := []string{}
+					if strings.Contains(message.Text, "atau") {
+						replyString := []string{}
+						if strings.Contains(lowerCaseMessage, "?") {
+							splitMessage := regexp.MustCompile(`(\?|\.|!)`).Split(lowerCaseMessage, -1)
+							replyString = strings.Split(splitMessage[0], "apakah ")
+						} else {
+							replyString = strings.Split(lowerCaseMessage, "apakah ")
+						}
+
+						replyMessage = strings.Split(replyString[1], " atau ")
+
+					} else if strings.Contains(lowerCaseMessage, "gacha") {
+						gachaResult, _ := gacha.GachaPercentage()
+						replyMessage = append(replyMessage, gachaResult)
+					} else {
+						replyMessage = []string{"ya", "tidak", "ya", "tidak"}
+					}
+
+					sendReply(bot, event, replyMessage)
+				} else if strings.Contains(lowerCaseMessage, "#kodenuklir3") || strings.Contains(lowerCaseMessage, "#kodenuklir6") {
+					replyMessage := []string{}
+					codeResult := code.GetRandomCode(lowerCaseMessage)
+					replyMessage = append(replyMessage, codeResult)
+
+					sendReply(bot, event, replyMessage)
+				} else if strings.Contains(lowerCaseMessage, "#osusumeanime") || strings.Contains(lowerCaseMessage, "#osusumemanga") || strings.Contains(lowerCaseMessage, "#osusumevn") {
+					replyMessage := []string{}
+					codeResult := osusume.GetRandomOsusume(lowerCaseMessage)
+					replyMessage = append(replyMessage, codeResult)
+
+					sendReply(bot, event, replyMessage)
+				}
+
+				if strings.Contains(message.Text, "$gacha sim") {
+					splitter := strings.Split(message.Text, "$")
+					draw, _ := strconv.Atoi(strings.Split(splitter[2], " ")[1])
+					rate, _ := strconv.Atoi(strings.Split(splitter[3], " ")[1])
+
+					replyMessage := gacha.GachaSim(draw, rate, 1, 0)
+
+					if _, err := bot.ReplyMessage(event.ReplyToken, linebot.NewTextMessage(replyMessage)).Do(); err != nil {
+						log.Print(err)
+					}
+				}
+
+				// if _, err = bot.ReplyMessage(event.ReplyToken, linebot.NewTextMessage(message.Text)).Do(); err != nil {
+				// 	log.Print(err)
+				// }
+
+				// case *linebot.StickerMessage:
+				// 	replyMessage := fmt.Sprintf(
+				// 		"sticker id is %s, stickerResourceType is %s", message.StickerID, message.StickerResourceType)
+				// 	if _, err = bot.ReplyMessage(event.ReplyToken, linebot.NewTextMessage(replyMessage)).Do(); err != nil {
+				// 		log.Print(err)
+				// 	}
+			}
+		}
+	}
+}
+
 func main() {
+
 	bot, err := linebot.New(
 		os.Getenv("CHANNEL_SECRET"),
 		os.Getenv("CHANNEL_TOKEN"),
@@ -62,84 +141,22 @@ func main() {
 
 	// Setup HTTP Server for receiving requests from LINE platform
 	http.HandleFunc("/callback", func(w http.ResponseWriter, req *http.Request) {
-		events, err := bot.ParseRequest(req)
-		if err != nil {
-			if err == linebot.ErrInvalidSignature {
-				w.WriteHeader(400)
-			} else {
-				w.WriteHeader(500)
-			}
-			return
-		}
-		for _, event := range events {
-			if event.Type == linebot.EventTypeMessage {
-				switch message := event.Message.(type) {
-				case *linebot.TextMessage:
-					lowerCaseMessage := strings.ToLower(message.Text)
-					if strings.Contains(lowerCaseMessage, "#apakah") {
-						replyMessage := []string{}
-						if strings.Contains(message.Text, "atau") {
-							replyString := []string{}
-							if strings.Contains(lowerCaseMessage, "?") {
-								splitMessage := regexp.MustCompile(`(\?|\.|!)`).Split(lowerCaseMessage, -1)
-								replyString = strings.Split(splitMessage[0], "apakah ")
-							} else {
-								replyString = strings.Split(lowerCaseMessage, "apakah ")
-							}
-
-							replyMessage = strings.Split(replyString[1], " atau ")
-
-						} else if strings.Contains(lowerCaseMessage, "gacha") {
-							gachaResult, _ := gacha.GachaPercentage()
-							replyMessage = append(replyMessage, gachaResult)
-						} else {
-							replyMessage = []string{"ya", "tidak", "ya", "tidak"}
-						}
-
-						sendReply(bot, event, replyMessage)
-					} else if strings.Contains(lowerCaseMessage, "#kodenuklir3") || strings.Contains(lowerCaseMessage, "#kodenuklir6") {
-						replyMessage := []string{}
-						codeResult := code.GetRandomCode(lowerCaseMessage)
-						replyMessage = append(replyMessage, codeResult)
-
-						sendReply(bot, event, replyMessage)
-					} else if strings.Contains(lowerCaseMessage, "#osusumeanime") || strings.Contains(lowerCaseMessage, "#osusumemanga") || strings.Contains(lowerCaseMessage, "#osusumevn") {
-						replyMessage := []string{}
-						codeResult := osusume.GetRandomOsusume(lowerCaseMessage)
-						replyMessage = append(replyMessage, codeResult)
-
-						sendReply(bot, event, replyMessage)
-					}
-
-					if strings.Contains(message.Text, "$gacha sim") {
-						splitter := strings.Split(message.Text, "$")
-						draw, _ := strconv.Atoi(strings.Split(splitter[2], " ")[1])
-						rate, _ := strconv.Atoi(strings.Split(splitter[3], " ")[1])
-
-						replyMessage := gacha.GachaSim(draw, rate, 1, 0)
-
-						if _, err := bot.ReplyMessage(event.ReplyToken, linebot.NewTextMessage(replyMessage)).Do(); err != nil {
-							log.Print(err)
-						}
-					}
-
-					// if _, err = bot.ReplyMessage(event.ReplyToken, linebot.NewTextMessage(message.Text)).Do(); err != nil {
-					// 	log.Print(err)
-					// }
-
-					// case *linebot.StickerMessage:
-					// 	replyMessage := fmt.Sprintf(
-					// 		"sticker id is %s, stickerResourceType is %s", message.StickerID, message.StickerResourceType)
-					// 	if _, err = bot.ReplyMessage(event.ReplyToken, linebot.NewTextMessage(replyMessage)).Do(); err != nil {
-					// 		log.Print(err)
-					// 	}
-				}
-			}
-		}
+		log.Print(req)
+		handleCallback(w, req, bot)
 	})
-	// This is just sample code.
-	// For actual use, you must support HTTPS by using `ListenAndServeTLS`, a reverse proxy or something else.
-	if err := http.ListenAndServe(":"+os.Getenv("PORT"), nil); err != nil {
-		log.Fatal(err)
+
+	// lambda.Start(httpadapter.New(http.DefaultServeMux).ProxyWithContext)
+
+	is_lambda := os.Getenv("IS_LAMBDA")
+
+	if is_lambda == "yes" {
+		algnhsa.ListenAndServe(http.DefaultServeMux, nil)
+	} else {
+
+		// This is just sample code.
+		// For actual use, you must support HTTPS by using `ListenAndServeTLS`, a reverse proxy or something else.
+		if err := http.ListenAndServe(":"+os.Getenv("PORT"), nil); err != nil {
+			log.Fatal(err)
+		}
 	}
 }

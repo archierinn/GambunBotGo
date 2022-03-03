@@ -9,6 +9,10 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/s3"
 )
 
 const FILE_JSON string = "json/code.json"
@@ -25,6 +29,39 @@ const MAX_RANDOM_NUMBER int = 400000
 type JSONCode struct {
 	Code  string
 	Total string
+}
+
+func initAWS() *session.Session {
+	region := os.Getenv("REGION_NAME")
+	sess, err := session.NewSession(&aws.Config{
+		Region: aws.String(region)},
+	)
+	if err != nil {
+		panic(err)
+	}
+
+	return sess
+}
+
+func FileGetFromS3(awsSession *session.Session) ([]byte, error) {
+	s3Client := s3.New(awsSession)
+	bucket := os.Getenv("BUCKET_NAME")
+	key := os.Getenv("FILE_NAME")
+
+	requestInput := &s3.GetObjectInput{
+		Bucket: aws.String(bucket),
+		Key:    aws.String(key),
+	}
+	result, err := s3Client.GetObject(requestInput)
+
+	if err != nil {
+		log.Print(err)
+	}
+
+	defer result.Body.Close()
+
+	data, err := ioutil.ReadAll(result.Body)
+	return data, err
 }
 
 func FileGetContents(filename string) ([]byte, error) {
@@ -59,7 +96,16 @@ func StrPadLeft(input string, padLength int, padString string) string {
 }
 
 func GetCodeThree() string {
-	fileByte, _ := FileGetContents(FILE_JSON)
+	is_lambda := os.Getenv("IS_LAMBDA")
+	var fileByte []byte
+
+	if is_lambda == "yes" {
+		awsSession := initAWS()
+		fileByte, _ = FileGetFromS3(awsSession)
+	} else {
+		fileByte, _ = FileGetContents(FILE_JSON)
+	}
+
 	var decodedJSON []JSONCode
 	if _err := json.Unmarshal(fileByte, &decodedJSON); _err != nil {
 		log.Print(_err)

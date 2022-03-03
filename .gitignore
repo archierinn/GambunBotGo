@@ -13,6 +13,8 @@
 *.out
 
 # Dependency directories (remove the comment below to include it)
-# vendor/
+vendor/github.com/**/*
 
 *.json
+main
+main.zip
