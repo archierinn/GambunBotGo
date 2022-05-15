@@ -15,12 +15,13 @@
 package main
 
 import (
-	"gambunbot/gacha"
 	"log"
 	"net/http"
 	"os"
 	"strconv"
 	"strings"
+
+	"gambunbot/gacha"
 
 	"github.com/line/line-bot-sdk-go/v7/linebot"
 )
@@ -68,10 +69,23 @@ func main() {
 								log.Print(err)
 							}
 						} else {
-							replyMessage, _ := gacha.GachaPercentage()
+							replyMessage, percentage := gacha.GachaPercentage()
+							var pkgSticker, pickSticker string
 
-							if _, err = bot.ReplyMessage(event.ReplyToken, linebot.NewTextMessage(replyMessage)).Do(); err != nil {
-								log.Print(err)
+							if percentage >= 75 {
+								pkgSticker, pickSticker = gacha.HappyReaction()
+								if _, err := bot.ReplyMessage(event.ReplyToken, linebot.NewTextMessage(replyMessage), linebot.NewStickerMessage(pkgSticker, pickSticker)).Do(); err != nil {
+									log.Print(err)
+								}
+							} else if percentage <= 44 {
+								pkgSticker, pickSticker = gacha.SadReaction()
+								if _, err := bot.ReplyMessage(event.ReplyToken, linebot.NewTextMessage(replyMessage), linebot.NewStickerMessage(pkgSticker, pickSticker)).Do(); err != nil {
+									log.Print(err)
+								}
+							} else {
+								if _, err = bot.ReplyMessage(event.ReplyToken, linebot.NewTextMessage(replyMessage)).Do(); err != nil {
+									log.Print(err)
+								}
 							}
 						}
 					}
