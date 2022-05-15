@@ -22,6 +22,7 @@ import (
 	"strings"
 
 	"gambunbot/gacha"
+	"gambunbot/random_pics"
 
 	"github.com/line/line-bot-sdk-go/v7/linebot"
 )
@@ -99,6 +100,20 @@ func main() {
 
 						if _, err := bot.ReplyMessage(event.ReplyToken, linebot.NewTextMessage(replyMessage)).Do(); err != nil {
 							log.Print(err)
+						}
+					}
+
+					if strings.Contains(message.Text, "$cats") {
+						orgContent, orgPreview, errs := random_pics.GetCats()
+
+						if errs != "" {
+							if _, err := bot.ReplyMessage(event.ReplyToken, linebot.NewTextMessage(errs)).Do(); err != nil {
+								log.Print(err)
+							}
+						} else {
+							if _, err := bot.ReplyMessage(event.ReplyToken, linebot.NewImageMessage(orgContent, orgPreview)).Do(); err != nil {
+								log.Print(err)
+							}
 						}
 					}
 
