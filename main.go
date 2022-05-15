@@ -117,6 +117,20 @@ func main() {
 						}
 					}
 
+					if strings.Contains(message.Text, "$dogs") {
+						orgContent, orgPreview, errs := random_pics.GetDogs()
+
+						if errs != "" {
+							if _, err := bot.ReplyMessage(event.ReplyToken, linebot.NewTextMessage(errs)).Do(); err != nil {
+								log.Print(err)
+							}
+						} else {
+							if _, err := bot.ReplyMessage(event.ReplyToken, linebot.NewImageMessage(orgContent, orgPreview)).Do(); err != nil {
+								log.Print(err)
+							}
+						}
+					}
+
 					// if _, err = bot.ReplyMessage(event.ReplyToken, linebot.NewTextMessage(message.Text)).Do(); err != nil {
 					// 	log.Print(err)
 					// }
