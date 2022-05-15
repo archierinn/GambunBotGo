@@ -23,6 +23,7 @@ import (
 
 	"gambunbot/gacha"
 	"gambunbot/random_pics"
+	"gambunbot/utils"
 
 	"github.com/line/line-bot-sdk-go/v7/linebot"
 )
@@ -56,6 +57,14 @@ func main() {
 			if event.Type == linebot.EventTypeMessage {
 				switch message := event.Message.(type) {
 				case *linebot.TextMessage:
+					if strings.Contains(message.Text, "$help") || strings.Contains(message.Text, "$tasuke") {
+						replyMessage := utils.Help()
+
+						if _, err := bot.ReplyMessage(event.ReplyToken, linebot.NewTextMessage(replyMessage)).Do(); err != nil {
+							log.Print(err)
+						}
+					}
+
 					if strings.Contains(message.Text, "$apakah gacha") {
 						if strings.Contains(message.Text, "$draw") && strings.Contains(message.Text, "$rate") {
 							splitter := strings.Split(message.Text, "$")
