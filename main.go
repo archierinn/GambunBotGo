@@ -15,9 +15,6 @@
 package main
 
 import (
-	"gambunbot/code"
-	"gambunbot/gacha"
-	"gambunbot/osusume"
 	"log"
 	"math/rand"
 	"net/http"
@@ -27,12 +24,20 @@ import (
 	"strings"
 	"time"
 
+	"gambunbot/code"
+	"gambunbot/gacha"
+	"gambunbot/osusume"
+	"gambunbot/random_pics"
+	"gambunbot/utils"
+
 	"github.com/akrylysov/algnhsa"
 	"github.com/line/line-bot-sdk-go/v7/linebot"
 )
 
-const INITIAL_VALUE int = 0
-const ONE int = 1
+const (
+	INITIAL_VALUE int = 0
+	ONE           int = 1
+)
 
 func ArrayRand(elements []string) int {
 	rand.Seed(int64(time.Now().Nanosecond()))
@@ -47,6 +52,14 @@ func sendReply(bot *linebot.Client, event *linebot.Event, replyMessage []string)
 	index := ArrayRand(replyMessage)
 
 	if _, err := bot.ReplyMessage(event.ReplyToken, linebot.NewTextMessage(replyMessage[index])).Do(); err != nil {
+		log.Print(err)
+	}
+}
+
+func sendReplyAndSticker(bot *linebot.Client, event *linebot.Event, replyMessage []string, pkgSticker, pickSticker string) {
+	index := ArrayRand(replyMessage)
+
+	if _, err := bot.ReplyMessage(event.ReplyToken, linebot.NewTextMessage(replyMessage[index]), linebot.NewStickerMessage(pkgSticker, pickSticker)).Do(); err != nil {
 		log.Print(err)
 	}
 }
@@ -66,8 +79,16 @@ func handleCallback(w http.ResponseWriter, req *http.Request, bot *linebot.Clien
 			switch message := event.Message.(type) {
 			case *linebot.TextMessage:
 				lowerCaseMessage := strings.ToLower(message.Text)
+				if strings.Contains(lowerCaseMessage, "#help") || strings.Contains(lowerCaseMessage, "#tasuke") {
+					replyMessage := []string{}
+					help := utils.Help()
+					replyMessage = append(replyMessage, help)
+					sendReply(bot, event, replyMessage)
+				}
+
 				if strings.Contains(lowerCaseMessage, "#apakah") {
 					replyMessage := []string{}
+					var pkgSticker, pickSticker string
 					if strings.Contains(message.Text, "atau") {
 						replyString := []string{}
 						if strings.Contains(lowerCaseMessage, "?") {
@@ -80,12 +101,21 @@ func handleCallback(w http.ResponseWriter, req *http.Request, bot *linebot.Clien
 						replyMessage = strings.Split(replyString[1], " atau ")
 
 					} else if strings.Contains(lowerCaseMessage, "gacha") {
-						gachaResult, _ := gacha.GachaPercentage()
+						gachaResult, gachaPercentage := gacha.GachaPercentage()
 						replyMessage = append(replyMessage, gachaResult)
+
+						if gachaPercentage >= 75 {
+							pkgSticker, pickSticker = gacha.HappyReaction()
+						} else if gachaPercentage <= 44 {
+							pkgSticker, pickSticker = gacha.SadReaction()
+						}
 					} else {
 						replyMessage = []string{"ya", "tidak", "ya", "tidak"}
 					}
 
+					if pkgSticker != "" {
+						sendReplyAndSticker(bot, event, replyMessage, pkgSticker, pickSticker)
+					}
 					sendReply(bot, event, replyMessage)
 				} else if strings.Contains(lowerCaseMessage, "#kodenuklir3") || strings.Contains(lowerCaseMessage, "#kodenuklir6") {
 					replyMessage := []string{}
@@ -99,6 +129,34 @@ func handleCallback(w http.ResponseWriter, req *http.Request, bot *linebot.Clien
 					replyMessage = append(replyMessage, codeResult)
 
 					sendReply(bot, event, replyMessage)
+				}
+
+				if strings.Contains(lowerCaseMessage, "#cats") {
+					orgContent, orgPreview, errs := random_pics.GetCats()
+
+					if errs != "" {
+						if _, err := bot.ReplyMessage(event.ReplyToken, linebot.NewTextMessage(errs)).Do(); err != nil {
+							log.Print(err)
+						}
+					} else {
+						if _, err := bot.ReplyMessage(event.ReplyToken, linebot.NewImageMessage(orgContent, orgPreview)).Do(); err != nil {
+							log.Print(err)
+						}
+					}
+				}
+
+				if strings.Contains(lowerCaseMessage, "#dogs") {
+					orgContent, orgPreview, errs := random_pics.GetDogs()
+
+					if errs != "" {
+						if _, err := bot.ReplyMessage(event.ReplyToken, linebot.NewTextMessage(errs)).Do(); err != nil {
+							log.Print(err)
+						}
+					} else {
+						if _, err := bot.ReplyMessage(event.ReplyToken, linebot.NewImageMessage(orgContent, orgPreview)).Do(); err != nil {
+							log.Print(err)
+						}
+					}
 				}
 
 				if strings.Contains(message.Text, "$gacha sim") {
@@ -129,12 +187,10 @@ func handleCallback(w http.ResponseWriter, req *http.Request, bot *linebot.Clien
 }
 
 func main() {
-
 	bot, err := linebot.New(
 		os.Getenv("CHANNEL_SECRET"),
 		os.Getenv("CHANNEL_TOKEN"),
 	)
-
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -152,7 +208,6 @@ func main() {
 	if is_lambda == "yes" {
 		algnhsa.ListenAndServe(http.DefaultServeMux, nil)
 	} else {
-
 		// This is just sample code.
 		// For actual use, you must support HTTPS by using `ListenAndServeTLS`, a reverse proxy or something else.
 		if err := http.ListenAndServe(":"+os.Getenv("PORT"), nil); err != nil {
