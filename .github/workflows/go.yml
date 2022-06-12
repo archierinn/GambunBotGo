@@ -22,7 +22,7 @@ jobs:
       run: CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -v -a -o main main.go && zip main.zip main
 
     - name: Deploy
-      uses: appleboy/lambda-action@master
+      uses: appleboy/lambda-action@v0.1.5
       with:
         aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
         aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
