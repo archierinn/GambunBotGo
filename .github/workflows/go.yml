@@ -32,4 +32,3 @@ jobs:
         handler: main
         role: ${{ secrets.AWS_SERVICE_ROLE_ID }}
         runtime: go1.x
-        debug: true
