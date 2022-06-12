@@ -6,11 +6,11 @@ func Help() string {
 		"- #apakah <hal yang mau ditanyakan>, contoh: #apakah A?\n" +
 		"- #apakah <pilihan 1> atau <pilihan 2> (atau <pilihan ke-n>), contoh: #apakah 1 atau 2\n" +
 		"- #apakah gacha?\n" +
-		"- #cats (random cat pictures)" +
-		"- #dogs (random dog pictures)" +
+		"- #cats (random cat pictures)\n" +
+		"- #dogs (random dog pictures)\n" +
 		"- #kodenuklir3\n" +
 		"- #kodenuklir6\n" +
-		"- #osusumenanime\n" +
+		"- #osusumeanime\n" +
 		"- #osusumemanga\n" +
 		"- #osusumevn\n\n" +
 		"#help / #tasuke"
